@@ -51,17 +51,20 @@ def ncc(normalized_template, normalized_patch):
 
 def normalized_cross_correlation(image, template):
     h = image.copy().astype(np.float64)
-    padd_shape = np.ceil(np.array(template.shape) / 2).astype(np.int32)
+    padd_shape = np.floor(np.max(template.shape) / 2).astype(np.int32)
+    padd_shape1 = np.floor(np.min(template.shape) / 2).astype(np.int32)
+    padd_diff = padd_shape- padd_shape1
     image_padding = np.pad(image, padd_shape)
+    display(image_padding)
     p_height = template.shape[0]
     p_width = template.shape[1]
 
     normalized_template = template - np.mean(template)
-    for m in range(padd_shape[0], image.shape[0]):
-        for n in range(padd_shape[1], image.shape[1]):
-            patch = image_padding[m - padd_shape[0] : m - padd_shape[0] + p_height, n - padd_shape[1] : n - padd_shape[1] + p_width]
+    for m in range(image.shape[0]):
+        for n in range(image.shape[1]):
+            patch = image_padding[m + padd_diff: m + p_height + padd_diff, n : n + p_width]
             normalized_patch = patch - np.mean(patch)
-            h[m - padd_shape[0]][n - padd_shape[1]] = ncc(normalized_patch, normalized_template)
+            h[m][n] = ncc(normalized_patch, normalized_template)
     return h
 
 def threshold_image(img, t):
@@ -82,14 +85,25 @@ def task2():
     display(image)
     display(threshold_img)
 
-    print(threshold_img)
-    indices = np.where(result_ncc >= 0.7)
-    print(indices)
-
     result_cv_sqdiff = None  # calculate using opencv
     result_cv_ncc = None  # calculate using opencv
 
     # draw rectangle around found location in all four results
+
+    offsetx = int(template.shape[1] / 2)
+    offsety = int(template.shape[0] / 2)
+    image_cpy = image.copy()
+    for y in range(image.shape[0]):
+        for x in range(image.shape[1]):
+            if(result_ncc[y][x] > 0.7):
+                image_cpy = cv2.rectangle(
+                    image_cpy,
+                    (x - offsetx, y - offsety),
+                    (x + offsetx, y + offsety),
+                    (255, 255, 255, 0.4),
+                1)
+
+    display(image_cpy)
     # show the results
 
 
