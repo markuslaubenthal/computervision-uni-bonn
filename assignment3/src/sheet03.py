@@ -215,24 +215,54 @@ def task_3_c():
 
 def task_4_a():
     print("Task 4 (a) ...")
-    D = None  # construct the D matrix
-    W = None  # construct the W matrix
-    '''
-    ...
-    your code ...
-    ...
-    '''
+    # construct the D matrix
+    D = np.array([
+    [2.2, 0,   0,   0,	0,	0,	0,	 0],
+    [0,	  2.1, 0,   0,	0,	0,	0,	 0],
+    [0,   0,   2.6,	0,	0,	0,	0,   0],
+    [0,	  0,   0,   3,	0,	0,	0,	 0],
+    [0,	  0,   0,	0,	3,	0,	0,	 0],
+    [0,   0,   0,	0,	0,	3,	0,	 0],
+    [0,	  0,   0,	0,	0,	0,	3.3, 0],
+    [0,	  0,   0,	0,	0,	0,	0,	 2],
+    ])
+    # construct the W matrix
+    W = np.array([
+    [0,	  1,   0.2, 1,	0,	0,	0,	 0],
+    [1,	  0,   0.1, 0,	1,	0,	0,	 0],
+    [0.2, 0.1, 0,	1,	0,	1,	0.3, 0],
+    [1,	  0,   1,   0,	0,	1,	0,	 0],
+    [0,	  1,   0,	0,	0,	0,	1,	 1],
+    [0,   0,   1,	1,	0,	0,	1,	 0],
+    [0,	  0,   0.3,	0,	1,	1,	0,	 1],
+    [0,	  0,   0,	0,	1,	0,	1,	 0],
+    ])
 
+    Dpowinv = np.sqrt(np.linalg.inv(D))
+
+    A = np.dot(np.dot(Dpowinv,D-W), Dpowinv)
+
+    State, EigValues, EigVectors = cv.eigen(A)
+
+    print('Task 4 (b) ...')
+    print('eigen vector to smalles eigen value:')
+    print(np.round(EigVectors[0:,-1:],2))
+    print('C1 = {A,B,E,G,H}, C1 = {C,D,F}')
+    volC1 = 2.2 + 2.1 + 3 + 3.3 + 2
+    volC2 = 2.6 + 3 + 3
+    cut = 1 + 0.2 + 0.1 + 0.3 + 1
+    normCut = cut/volC1 + cut/volC2
+    print('the NormCut is ', normCut)
 
 ##############################################
 ##############################################
 ##############################################
 
 if __name__ == "__main__":
-    # task_1_a()
-    # task_1_b()
-    # task_2()
-    # task_3_a()
-    # task_3_b()
-    task_3_c()
-    task_4_a()
+    #task_1_a()
+    #task_1_b()
+    #task_2()
+    #task_3_a()
+    #task_3_b()
+    #task_3_c()
+    # task_4_a()
