@@ -1,3 +1,5 @@
+# Authors: Markus Laubenthal, Lennard Alms
+
 import numpy as np
 import cv2 as cv
 import random
