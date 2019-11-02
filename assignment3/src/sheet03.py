@@ -25,7 +25,6 @@ def task_1_a():
     ...
     '''
     edges = cv.Canny(img,50,150,apertureSize = 3)
-    # display(edges)
     houghLines = cv.HoughLines(edges,0.7,np.pi/180,55)
     for x in houghLines:
         rho,theta = x[0]
@@ -52,8 +51,7 @@ def myHoughLines(img_edges, d_resolution, theta_step_sz, threshold):
     """
     distSteps = int(np.linalg.norm(img_edges.shape) / d_resolution)
     degSteps = int(np.pi / theta_step_sz)
-    print(distSteps)
-    print(degSteps)
+
     accumulator = np.zeros((degSteps, distSteps))
     with np.nditer(img_edges, flags=['multi_index']) as it:
         for px in it:
@@ -313,8 +311,8 @@ def task_4_a():
 if __name__ == "__main__":
     task_1_a()
     task_1_b()
-    #task_2()
-    #task_3_a()
-    #task_3_b()
-    #task_3_c()
-    #task_4_a()
+    task_2()
+    task_3_a()
+    task_3_b()
+    task_3_c()
+    task_4_a()
