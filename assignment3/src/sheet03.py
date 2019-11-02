@@ -48,21 +48,50 @@ def myHoughLines(img_edges, d_resolution, theta_step_sz, threshold):
     :param threshold: minimum number of votes to consider a detection
     :return: list of detected lines as (d, theta) pairs and the accumulator
     """
-    accumulator = np.zeros((int(180 / theta_step_sz), int(np.linalg.norm(img_edges.shape) / d_resolution)))
+    distSteps = int(np.linalg.norm(img_edges.shape) / d_resolution)
+    degSteps = int(np.pi / theta_step_sz)
+    print(distSteps)
+    print(degSteps)
+    accumulator = np.zeros((degSteps, distSteps))
+    with np.nditer(img_edges, flags=['multi_index']) as it:
+        for px in it:
+            if px > 3:
+                for deg in range(degSteps):
+                    p = (it.multi_index[0] * np.cos(deg)) + (it.multi_index[1] * np.sin(deg))
+                    if(-distSteps/2 <= p and p < distSteps/2):
+                        accumulator[deg, int(p + distSteps/2) ] += 1
+
     detected_lines = []
-    '''
-    ...
-    your code ...
-    ...
-    '''
+    with np.nditer(accumulator, flags=['multi_index']) as it2:
+        for votes in it2:
+            if votes >= threshold:
+                detected_lines.append(it2.multi_index)
+
     return detected_lines, accumulator
 
 
 def task_1_b():
     print("Task 1 (b) ...")
     img = cv.imread('../images/shapes.png')
-    img_gray = None # convert the image into grayscale
-    edges = None # detect the edges
+    edges = cv.Canny(img,50,150,apertureSize = 3)
+    houghLines, accumulator= myHoughLines(edges,0.7,np.pi/180,55)
+
+    display(accumulator/np.max(accumulator))
+
+    for theta,rho in houghLines:
+        rho = rho - accumulator.shape[1] / 2
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a*rho
+        y0 = b*rho
+        x1 = int(x0 + 10000*(-b))
+        y1 = int(y0 + 10000*(a))
+        x2 = int(x0 - 10000*(-b))
+        y2 = int(y0 - 10000*(a))
+        cv.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+
+    display(img)
+
     #detected_lines, accumulator = myHoughLines(edges, 1, 2, 50)
     '''
     ...
@@ -209,16 +238,16 @@ def task_4_a():
     cut = 1 + 0.2 + 0.1 + 0.3 + 1
     normCut = cut/volC1 + cut/volC2
     print('the NormCut is ', normCut)
-    
+
 ##############################################
 ##############################################
 ##############################################
 
 if __name__ == "__main__":
-    #task_1_a()
-    #task_1_b()
+    task_1_a()
+    task_1_b()
     #task_2()
     #task_3_a()
     #task_3_b()
     #task_3_c()
-    task_4_a()
+    #task_4_a()
