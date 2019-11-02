@@ -105,30 +105,39 @@ def myKmeans(data, k):
     """
     centers = np.zeros((k, data.shape[1]))
     index = np.zeros(data.shape[0], dtype=int)
-    clusters = [[] for i in range(k)]
+    # clusters = [[] for i in range(k)]
 
     # initialize centers using some random points from data
     # ....
-    for i in range(data.shape[1]):
-        subset = data[:,i]
-        r = np.random.uniform(
-            np.min(subset),
-            np.max(subset),
-            len(clusters))
-        centers[:,i] = r
+    for i in range(k):
+        random_index = np.random.randint(0, data.shape[0])
+        centers[i] = data[random_index]
 
-    print(centers)
     convergence = False
     iterationNo = 0
     while not convergence:
+        clusters = [[] for i in range(k)]
         # assign each point to the cluster of closest center
         # ...
+        for d_index, datapoint in enumerate(data):
+            euclidian_distance = np.linalg.norm(datapoint - centers, axis=1)
+            cluster_index = np.argmin(euclidian_distance)
+            clusters[cluster_index].append(datapoint)
+            index[d_index] = cluster_index
+
 
         # update clusters' centers and check for convergence
         # ...
+        new_centers = centers.copy()
+        for c_index, cluster in enumerate(clusters):
+            new_centers[c_index] = np.mean(cluster, axis=0)
+        if(np.sum(centers - new_centers) == 0):
+            convergence = True
+        centers = new_centers
 
         iterationNo += 1
         print('iterationNo = ', iterationNo)
+        if(iterationNo == 30): convergence = True
 
     return index, centers
 
@@ -142,7 +151,15 @@ def task_3_a():
     ...
     '''
     data = img.reshape((img.shape[0] * img.shape[1], 3))
-    myKmeans(data, 5)
+    data = np.mean(data, axis=1).reshape(data.shape[0],1)
+    for k in [2,4,6]:
+        kmeans = myKmeans(data, k)
+        indices = kmeans[0]
+        img_copy = data.copy().astype(np.uint8)
+        for cluster_id, cluster in enumerate(kmeans[1]):
+            cluster_indices = np.where(indices == cluster_id)
+            img_copy[cluster_indices] = cluster[0:3]
+        display(img_copy.reshape(img.shape[0], img.shape[1], 1))
 
 def task_3_b():
     print("Task 3 (b) ...")
@@ -152,6 +169,15 @@ def task_3_b():
     your code ...
     ...
     '''
+    data = img.copy().reshape((img.shape[0] * img.shape[1], 3))
+    for k in [2,4,6]:
+        kmeans = myKmeans(data, k)
+        indices = kmeans[0]
+        img_copy = img.reshape(img.shape[0] * img.shape[1], 3)
+        for cluster_id, cluster in enumerate(kmeans[1]):
+            cluster_indices = np.where(indices == cluster_id)
+            img_copy[cluster_indices] = cluster[0:3]
+        display(img_copy.reshape(img.shape[0], img.shape[1], 3))
 
 
 def task_3_c():
@@ -162,6 +188,24 @@ def task_3_c():
     your code ...
     ...
     '''
+    data = img.copy()
+    data = np.zeros((img.shape[0] * img.shape[1], 5))
+    data[:,0:3] = img.reshape(img.shape[0] * img.shape[1], 3)
+    for px_index, px_val in enumerate(data):
+        data[px_index,3:5] = np.array([px_index // img.shape[1] + 1, px_index % img.shape[1] + 1])
+        # Scale Image Coordinates to RGB Interval [0,255]
+        # Also keep the x:y ratio
+        data[px_index,3] = data[px_index,3] / np.maximum(img.shape[1], img.shape[0]) * 255
+        data[px_index,4] = data[px_index,4] / np.maximum(img.shape[1], img.shape[0]) * 255
+
+    for k in [2,4,6]:
+        kmeans = myKmeans(data, k)
+        indices = kmeans[0]
+        img_copy = img.reshape(img.shape[0] * img.shape[1], 3)
+        for cluster_id, cluster in enumerate(kmeans[1]):
+            cluster_indices = np.where(indices == cluster_id)
+            img_copy[cluster_indices] = cluster[0:3]
+        display(img_copy.reshape(img.shape[0], img.shape[1], 3))
 
 
 ##############################################
@@ -185,10 +229,10 @@ def task_4_a():
 ##############################################
 
 if __name__ == "__main__":
-    task_1_a()
-    task_1_b()
-    task_2()
-    task_3_a()
-    task_3_b()
+    # task_1_a()
+    # task_1_b()
+    # task_2()
+    # task_3_a()
+    # task_3_b()
     task_3_c()
     task_4_a()
