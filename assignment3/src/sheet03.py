@@ -1,3 +1,5 @@
+# Authors: Markus Laubenthal, Lennard Alms
+
 import numpy as np
 import cv2 as cv
 import random
@@ -134,30 +136,46 @@ def myKmeans(data, k):
     """
     centers = np.zeros((k, data.shape[1]))
     index = np.zeros(data.shape[0], dtype=int)
-    clusters = [[] for i in range(k)]
+    # clusters = [[] for i in range(k)]
 
     # initialize centers using some random points from data
     # ....
-    for i in range(data.shape[1]):
-        subset = data[:,i]
-        r = np.random.uniform(
-            np.min(subset),
-            np.max(subset),
-            len(clusters))
-        centers[:,i] = r
+    for i in range(k):
+        random_index = np.random.randint(0, data.shape[0])
+        centers[i] = data[random_index]
 
-    print(centers)
     convergence = False
     iterationNo = 0
     while not convergence:
+        # Create empty Clusters
+        clusters = [[] for i in range(k)]
         # assign each point to the cluster of closest center
         # ...
+        for d_index, datapoint in enumerate(data):
+            # Calculate euclidean distance for one point to all the clusters
+            euclidean_distance = np.linalg.norm(datapoint - centers, axis=1)
+            # Select the cluster with the minimum distance to the point
+            cluster_index = np.argmin(euclidean_distance)
+            # Assign the point to the cluster
+            clusters[cluster_index].append(datapoint)
+            index[d_index] = cluster_index
+
 
         # update clusters' centers and check for convergence
         # ...
+        new_centers = centers.copy()
+        # For every cluster calculate its mean and set it as new center
+        for c_index, cluster in enumerate(clusters):
+            new_centers[c_index] = np.mean(cluster, axis=0)
+        # Check if something changed. If yes, continue. If no, convergence = True
+        if(np.sum(centers - new_centers) == 0):
+            convergence = True
+        # Update Centers for new iteration
+        centers = new_centers
 
         iterationNo += 1
         print('iterationNo = ', iterationNo)
+        if(iterationNo == 30): convergence = True
 
     return index, centers
 
@@ -170,8 +188,21 @@ def task_3_a():
     your code ...
     ...
     '''
-    data = img.reshape((img.shape[0] * img.shape[1], 3))
-    myKmeans(data, 5)
+    # Reshape Image to Intensity Image as list of pixels
+    data = img.copy().reshape((img.shape[0] * img.shape[1], 3))
+    data = np.mean(data, axis=1).reshape(data.shape[0],1)
+
+    for k in [2,4,6]:
+        # calculate kmeans for k=2,4,6
+        kmeans = myKmeans(data, k)
+        indices = kmeans[0]
+        img_copy = data.copy().astype(np.uint8)
+        # Iterate over clusters and replace pixels with Cluster Value
+        for cluster_id, cluster in enumerate(kmeans[1]):
+            cluster_indices = np.where(indices == cluster_id)
+            img_copy[cluster_indices] = cluster[0:3]
+        #Display the image
+        display(img_copy.reshape(img.shape[0], img.shape[1], 1))
 
 def task_3_b():
     print("Task 3 (b) ...")
@@ -181,6 +212,18 @@ def task_3_b():
     your code ...
     ...
     '''
+    # Reshape to a list of RGB pixels
+    data = img.copy().reshape((img.shape[0] * img.shape[1], 3))
+    for k in [2,4,6]:
+        # Calculate kmeans for k = 2,4,6
+        kmeans = myKmeans(data, k)
+        indices = kmeans[0]
+        img_copy = img.reshape(img.shape[0] * img.shape[1], 3)
+        # Iterate over clusters and replace pixels with Cluster Value
+        for cluster_id, cluster in enumerate(kmeans[1]):
+            cluster_indices = np.where(indices == cluster_id)
+            img_copy[cluster_indices] = cluster[0:3]
+        display(img_copy.reshape(img.shape[0], img.shape[1], 3))
 
 
 def task_3_c():
@@ -191,6 +234,30 @@ def task_3_c():
     your code ...
     ...
     '''
+    data = img.copy()
+    # Create new Dataset and expand every pixel from RGB to RGBXY
+    data = np.zeros((img.shape[0] * img.shape[1], 5))
+    # Set RGB Values for every data point
+    data[:,0:3] = img.reshape(img.shape[0] * img.shape[1], 3)
+
+    # Set X,Y Coordinates for every data point
+    for px_index, px_val in enumerate(data):
+        data[px_index,3:5] = np.array([px_index // img.shape[1] + 1, px_index % img.shape[1] + 1])
+        # Scale Image Coordinates to RGB Interval [0,255]
+        # Also keep the x:y ratio
+        data[px_index,3] = data[px_index,3] / np.maximum(img.shape[1], img.shape[0]) * 255
+        data[px_index,4] = data[px_index,4] / np.maximum(img.shape[1], img.shape[0]) * 255
+
+    for k in [2,4,6]:
+        # Calculate kmeans for k = 2,4,6
+        kmeans = myKmeans(data, k)
+        indices = kmeans[0]
+        img_copy = img.reshape(img.shape[0] * img.shape[1], 3)
+        # Iterate over clusters and replace pixels with Cluster Value
+        for cluster_id, cluster in enumerate(kmeans[1]):
+            cluster_indices = np.where(indices == cluster_id)
+            img_copy[cluster_indices] = cluster[0:3]
+        display(img_copy.reshape(img.shape[0], img.shape[1], 3))
 
 
 ##############################################
