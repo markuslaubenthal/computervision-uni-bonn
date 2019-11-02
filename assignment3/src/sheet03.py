@@ -173,7 +173,6 @@ def myKmeans(data, k):
 
         iterationNo += 1
         print('iterationNo = ', iterationNo)
-        if(iterationNo == 30): convergence = True
 
     return index, centers
 
@@ -295,7 +294,7 @@ def task_4_a():
     State, EigValues, EigVectors = cv.eigen(A)
 
     print('Task 4 (b) ...')
-    print('eigen vector to smalles eigen value:')
+    print('eigen vector to smallest eigen value:')
     print(np.round(EigVectors[0:,-1:],2))
     print('C1 = {A,B,E,G,H}, C1 = {C,D,F}')
     volC1 = 2.2 + 2.1 + 3 + 3.3 + 2
