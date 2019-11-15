@@ -69,11 +69,10 @@ def scaled_mean_curvature_motion(phi):
     phi_y_kernel = np.array([[0, -0.5, 0], [0, 0, 0], [0, 0.5, 0]])
     phi_x = cv2.filter2D(phi, -1, phi_x_kernel)
     phi_y = cv2.filter2D(phi, -1, phi_y_kernel)
-    display(phi_x)
-    display(phi_y)
+    
 
-    phi_xx_kernel = np.array([1, -2, 1])
-    phi_yy_kernel = np.array([[1], [-2], [1]])
+    phi_xx_kernel = np.array([[0, 0, 0],[1, -2, 1],[0, 0, 0]])
+    phi_yy_kernel = np.array([[0,1,0], [0,-2,0], [0,1,0]])
 
     phi_xx = cv2.filter2D(phi, -1, phi_xx_kernel)
     phi_yy = cv2.filter2D(phi, -1, phi_yy_kernel)
@@ -92,16 +91,16 @@ def scaled_mean_curvature_motion(phi):
 def propagation_towards_edges(phi, w):
     # w' * phi'
 
-    w_x_kernel = np.array([-0.5, 0, 0.5])
-    w_y_kernel = np.array([[-0.5], [0], [0.5]])
+    w_x_kernel = np.array([[0, 0, 0],[-0.5, 0, 0.5],[0, 0, 0]])
+    w_y_kernel = np.array([[0, -0.5, 0], [0, 0, 0], [0, 0.5, 0]])
     w_x = cv2.filter2D(w, -1, w_x_kernel)
     w_y = cv2.filter2D(w, -1, w_y_kernel)
 
     # One sided difference
-    osdf_kernel_x = np.array([0,-1,1])
-    osdf_kernel_y = np.array([[0],[-1],[1]])
-    osdb_kernel_x = np.array([-1,1,0])
-    osdb_kernel_y = np.array([[-1],[1],[0]])
+    osdf_kernel_x = np.array([[0, 0, 0],[0,-1,1],[0, 0, 0]])
+    osdf_kernel_y = np.array([[0,0,0],[0,-1,0],[0,1,0]])
+    osdb_kernel_x = np.array([[0, 0, 0],[-1,1,0],[0, 0, 0]])
+    osdb_kernel_y = np.array([[0,-1,0],[0,1,0],[0,0,0]])
 
     phi_osdf_x = cv2.filter2D(phi, -1, osdf_kernel_x)
     phi_osdf_y = cv2.filter2D(phi, -1, osdf_kernel_y)
