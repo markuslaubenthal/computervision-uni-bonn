@@ -50,8 +50,6 @@ def get_contour(phi):
 # ------------------------
 def edge_magnitude(Im):
 
-    #Im = Im / 255.0
-
     # Kernels for finding partial derivatives
     mx = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
     my = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]])
@@ -65,15 +63,14 @@ def edge_magnitude(Im):
 
     return magnitude
 
-phi_x, phi_y, phi_xy = None, None, None
 def scaled_mean_curvature_motion(phi):
 
-    global phi_x, phi_y, phi_xy
-
-    phi_x_kernel = np.array([-0.5, 0, 0.5])
-    phi_y_kernel = np.array([[-0.5], [0], [0.5]])
+    phi_x_kernel = np.array([[0, 0, 0], [-0.5, 0, 0.5], [0, 0, 0]])
+    phi_y_kernel = np.array([[0, -0.5, 0], [0, 0, 0], [0, 0.5, 0]])
     phi_x = cv2.filter2D(phi, -1, phi_x_kernel)
     phi_y = cv2.filter2D(phi, -1, phi_y_kernel)
+    display(phi_x)
+    display(phi_y)
 
     phi_xx_kernel = np.array([1, -2, 1])
     phi_yy_kernel = np.array([[1], [-2], [1]])
@@ -81,7 +78,7 @@ def scaled_mean_curvature_motion(phi):
     phi_xx = cv2.filter2D(phi, -1, phi_xx_kernel)
     phi_yy = cv2.filter2D(phi, -1, phi_yy_kernel)
 
-    phi_xy_kernel = np.array([[1, 0, -1], [0,0,0], [-1,0,1]])
+    phi_xy_kernel = np.array([[0.25, 0, -0.25], [0,0,0], [-0.25,0,0.25]])
     phi_xy = cv2.filter2D(phi, -1, phi_xy_kernel)
 
     eps = 10 ** (-4)
@@ -94,9 +91,6 @@ def scaled_mean_curvature_motion(phi):
 
 def propagation_towards_edges(phi, w):
     # w' * phi'
-
-    # w_x = 0.5 * (w[i , j + 1] - w[i, j - 1])
-    # w_y = 0.5 * (w[i + 1, j] - w[i - 1, j])
 
     w_x_kernel = np.array([-0.5, 0, 0.5])
     w_y_kernel = np.array([[-0.5], [0], [0.5]])
@@ -115,29 +109,10 @@ def propagation_towards_edges(phi, w):
     phi_osdb_y = cv2.filter2D(phi, -1, osdb_kernel_y)
 
 
-
-    # phi_xy = 0.25 * (phi[i + 1, j + 1] - phi[i - 1, j + 1] -
-    #                  phi[i + 1, j - 1] + phi[i - 1, j - 1])
-
-    # phi_x_next_y = 0.25 * (phi[i + 1, j + 2] - phi[i - 1, j + 2] -
-    #                        phi[i + 1, j] + phi[i - 1, j])
-    #
-    # phi_x_prev_y = 0.25 * (phi[i + 1, j] - phi[i - 1, j] -
-    #                        phi[i + 1, j - 2] + phi[i - 1, j - 2])
-    #
-    # phi_x_y_next = 0.25 * (phi[i + 2, j + 1] - phi[i, j + 1] -
-    #                        phi[i + 2, j - 1] + phi[i, j - 1])
-    #
-    # phi_x_y_prev = 0.25 * (phi[i, j + 1] - phi[i - 2, j + 1] -
-    #                        phi[i, j - 1] + phi[i - 2, j - 1])
-
-
-
-
-    uphill_dir = (np.max(w_x, 0) * (phi_osdf_x) +
-                  np.min(w_x, 0) * (phi_osdb_x) +
-                  np.max(w_y, 0) * (phi_osdf_y) +
-                  np.min(w_y, 0) * (phi_osdb_y))
+    uphill_dir = (np.max(np.max(w_x), 0) * (phi_osdf_x) +
+                  np.min(np.min(w_x), 0) * (phi_osdb_x) +
+                  np.max(np.max(w_y), 0) * (phi_osdf_y) +
+                  np.min(np.min(w_y), 0) * (phi_osdb_y))
 
     return uphill_dir
 
@@ -156,7 +131,7 @@ def geodesic_active_contour(edge_magn, phi):
     mean_curv_mot = scaled_mean_curvature_motion(phi)
     prop_towards_edges = propagation_towards_edges(phi, w)
 
-    phi_next = phi + tau1 * w * mean_curv_mot# + prop_towards_edges
+    phi_next = phi + tau1 * w * mean_curv_mot + 0.5 * prop_towards_edges
 
     return phi_next
 # ------------------------
