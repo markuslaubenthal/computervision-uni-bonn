@@ -60,35 +60,53 @@ def run(fpath, radius):
     :return:
     """
     img, V = load_data(fpath, radius)
-
+    #V[1] = [0,0]
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111)
     n_steps = 200
 
     # ------------------------
     # take derivative of the image
-    img_dx = cv2.Sobel(img, -1, 1, 0, 7)
-    img_dy = cv2.Sobel(img, -1, 0, 1, 7)
+
+    img_blur = cv2.medianBlur(img, 15)
+
+    img_dx = cv2.Sobel(img_blur, -1, 1, 0, 7).astype('float32') / 255
+    img_dy = cv2.Sobel(img_blur, -1, 0, 1, 7).astype('float32') / 255
+
+    # with np.nditer(img_dx, op_flags=['readwrite']) as it:
+    #     for px in it:
+    #         if(px < 0.7):
+    #             px[...] = 0.0
+    #
+    # with np.nditer(img_dy, op_flags=['readwrite']) as it:
+    #     for px in it:
+    #         if(px < 0.7):
+    #             px[...] = 0.0
 
     #define helper functions for energy calculation
-    dx_i = lambda px: img_dx[px[0],px[1]]
-    dy_i = lambda px: img_dy[px[0],px[1]]
+    dx_i = lambda px: img_dx[px[1],px[0]]
+    dy_i = lambda px: img_dy[px[1],px[0]]
 
     ext_e = lambda px : -(dx_i(px) ** 2 + dy_i(px) ** 2)
 
     #d2_v = lambda i: V[i+1 % len(V)] - 2 * V[i] + V[i-1 % len(V)]
 
-    def get_elast(V, alpha):
-        dist_avg = 0
-        for i in range(len(V)):
-            dist_avg += np.linalg.norm(V[i]-V[(i+1) % len(V)])
-        dist_avg /= len(V)
-        print(dist_avg)
-        return lambda u,v: alpha * (np.linalg.norm(u-v) - dist_avg) ** 2
+    def get_elast(V, alpha, substractAvg):
+
+        dist_avg = 1
+
+        if substractAvg:
+
+            for i in range(len(V)):
+                dist_avg += np.linalg.norm(V[i]-V[(i+1) % len(V)])
+            dist_avg -= 1
+            dist_avg /= len(V)
+
+        return lambda u,v : alpha * (np.linalg.norm(u-v) - dist_avg + 0.5) ** 2
 
 
     #define alpha
-    alpha = 0.001
+    alpha = 2
 
     # ------------------------
 
@@ -96,7 +114,9 @@ def run(fpath, radius):
         # ------------------------
 
         #get function for internal energy (pairwise term)
-        int_e = get_elast(V, alpha)
+
+
+        int_e = get_elast(V, alpha, True)
 
         #calculate unary terms
         unary = []
@@ -112,7 +132,7 @@ def run(fpath, radius):
                                'acc': 0} )
 
             unary.append(u)
-
+        #break
         #dyn prog
         for i in range(1, len(V)):
             for u in unary[i]:
@@ -120,6 +140,7 @@ def run(fpath, radius):
                 parent = None
                 for v in unary[i-1]:
                     int = int_e(u['pos'], v['pos'])
+                    #print(np.linalg.norm(u['pos']-v['pos'])/avg)
                     energy = v['acc'] + v['ext'] + int
                     if(energy < smallest_energy):
                         smallest_energy = energy
@@ -144,8 +165,9 @@ def run(fpath, radius):
             print(smallest_node['ext'])
         print('______')
 
-        V = np.array(V_new)
+        V_new.append(V_new.pop(0))
 
+        V = np.array(V_new[::-1])
         # ------------------------
 
         ax.clear()
@@ -160,4 +182,4 @@ def run(fpath, radius):
 
 if __name__ == '__main__':
     run('images/ball.png', radius=120)
-    #run('images/coffee.png', radius=98)
+    run('images/coffee.png', radius=130)
