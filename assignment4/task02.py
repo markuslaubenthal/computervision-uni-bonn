@@ -69,22 +69,27 @@ def edge_magnitude(Im):
 
 def scaled_mean_curvature_motion(phi):
 
+    #Derive phi_x and phi_y
     phi_x_kernel = np.array([[0, 0, 0], [-0.5, 0, 0.5], [0, 0, 0]])
     phi_y_kernel = np.array([[0, -0.5, 0], [0, 0, 0], [0, 0.5, 0]])
     phi_x = cv2.filter2D(phi, -1, phi_x_kernel)
     phi_y = cv2.filter2D(phi, -1, phi_y_kernel)
 
 
+    # Derive phi 2 times for x and 2 times for y
     phi_xx_kernel = np.array([[0, 0, 0],[1, -2, 1],[0, 0, 0]])
     phi_yy_kernel = np.array([[0,1,0], [0,-2,0], [0,1,0]])
 
     phi_xx = cv2.filter2D(phi, -1, phi_xx_kernel)
     phi_yy = cv2.filter2D(phi, -1, phi_yy_kernel)
 
+
+    # Derive phi for xy
     phi_xy_kernel = np.array([[0.25, 0, -0.25], [0,0,0], [-0.25,0,0.25]])
     phi_xy = cv2.filter2D(phi, -1, phi_xy_kernel)
 
     eps = 10 ** (-4)
+    # Calculate Mean curvature Motion
     mean_curv_mot = (phi_xx * phi_y ** 2 -
                      2 * phi_x * phi_y * phi_xy +
                      phi_yy * phi_x ** 2) / (phi_x ** 2 + phi_y ** 2 + eps)
@@ -93,14 +98,14 @@ def scaled_mean_curvature_motion(phi):
 
 
 def propagation_towards_edges(phi, w):
-    # w' * phi'
 
+    # Derive Omega for x and y
     w_x_kernel = np.array([[0, 0, 0],[-0.5, 0, 0.5],[0, 0, 0]])
     w_y_kernel = np.array([[0, -0.5, 0], [0, 0, 0], [0, 0.5, 0]])
     w_x = cv2.filter2D(w, -1, w_x_kernel)
     w_y = cv2.filter2D(w, -1, w_y_kernel)
 
-    # One sided difference
+    # One sided difference backwards and forwards on phi
     osdf_kernel_x = np.array([[0, 0, 0],[0,-1,1],[0, 0, 0]])
     osdf_kernel_y = np.array([[0,0,0],[0,-1,0],[0,1,0]])
     osdb_kernel_x = np.array([[0, 0, 0],[-1,1,0],[0, 0, 0]])
@@ -111,6 +116,7 @@ def propagation_towards_edges(phi, w):
     phi_osdb_x = cv2.filter2D(phi, -1, osdb_kernel_x)
     phi_osdb_y = cv2.filter2D(phi, -1, osdb_kernel_y)
 
+    # Calculate the Gradient Direction
     zeros = np.zeros(w_x.shape)
     uphill_dir = (np.maximum(w_x, zeros) * (phi_osdf_x) +
                   np.minimum(w_x, zeros) * (phi_osdb_x) +
@@ -125,15 +131,16 @@ def geodesic_active_contour(edge_magn, phi):
     # Geodesic metric
     w = 1 / (edge_magn + 1)
 
-    tau1 = 1 / (4 * np.max(w)) # 0.25 since max(w) = 1
-    #tau2 = 0.5
+    # Calculate tau
+    tau = 1 / (4 * np.max(w))
 
     phi_next = phi.copy()
 
     mean_curv_mot = scaled_mean_curvature_motion(phi)
     prop_towards_edges = propagation_towards_edges(phi, w)
 
-    phi_next = phi + tau1 * w * mean_curv_mot + prop_towards_edges
+    # Calculate phi for the next iteration
+    phi_next = phi + tau * w * mean_curv_mot + prop_towards_edges
 
     return phi_next
 # ------------------------
@@ -150,8 +157,8 @@ if __name__ == '__main__':
     ax1 = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
 
+    # Get the Image Gradient and save it for future use
     edges = edge_magnitude(Im)
-
 
     ax1.imshow(Im, cmap='gray')
     ax1.set_title('frame 0')
@@ -168,6 +175,7 @@ if __name__ == '__main__':
 
     for t in range(n_steps):
 
+        # Calculate phi_(t + 1) based on the image gradient and phi_t
         phi = geodesic_active_contour(edges, phi)
 
         if t % plot_every_n_step == 0:
