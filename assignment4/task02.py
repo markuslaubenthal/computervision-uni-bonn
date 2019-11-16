@@ -51,12 +51,16 @@ def get_contour(phi):
 def edge_magnitude(Im):
 
     # Kernels for finding partial derivatives
-    mx = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
-    my = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]])
+    mx = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]]) * 1/6
+    my = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]]) * 1/6
+    #
 
     # Partial derivaties of the image
     part_der_x = cv2.filter2D(Im, -1, mx)
     part_der_y = cv2.filter2D(Im, -1, my)
+
+    # part_der_x = cv2.Sobel(Im, -1, 1, 0, ksize=3)
+    # part_der_y = cv2.Sobel(Im, -1, 0, 1, ksize=3)
 
     # Magnitude of the derivative
     magnitude = part_der_x ** 2 + part_der_y ** 2
@@ -69,7 +73,7 @@ def scaled_mean_curvature_motion(phi):
     phi_y_kernel = np.array([[0, -0.5, 0], [0, 0, 0], [0, 0.5, 0]])
     phi_x = cv2.filter2D(phi, -1, phi_x_kernel)
     phi_y = cv2.filter2D(phi, -1, phi_y_kernel)
-    
+
 
     phi_xx_kernel = np.array([[0, 0, 0],[1, -2, 1],[0, 0, 0]])
     phi_yy_kernel = np.array([[0,1,0], [0,-2,0], [0,1,0]])
@@ -107,11 +111,11 @@ def propagation_towards_edges(phi, w):
     phi_osdb_x = cv2.filter2D(phi, -1, osdb_kernel_x)
     phi_osdb_y = cv2.filter2D(phi, -1, osdb_kernel_y)
 
-
-    uphill_dir = (np.max(np.max(w_x), 0) * (phi_osdf_x) +
-                  np.min(np.min(w_x), 0) * (phi_osdb_x) +
-                  np.max(np.max(w_y), 0) * (phi_osdf_y) +
-                  np.min(np.min(w_y), 0) * (phi_osdb_y))
+    zeros = np.zeros(w_x.shape)
+    uphill_dir = (np.maximum(w_x, zeros) * (phi_osdf_x) +
+                  np.minimum(w_x, zeros) * (phi_osdb_x) +
+                  np.maximum(w_y, zeros) * (phi_osdf_y) +
+                  np.minimum(w_y, zeros) * (phi_osdb_y))
 
     return uphill_dir
 
@@ -124,13 +128,12 @@ def geodesic_active_contour(edge_magn, phi):
     tau1 = 1 / (4 * np.max(w)) # 0.25 since max(w) = 1
     #tau2 = 0.5
 
-    height, width = phi.shape
     phi_next = phi.copy()
 
     mean_curv_mot = scaled_mean_curvature_motion(phi)
     prop_towards_edges = propagation_towards_edges(phi, w)
 
-    phi_next = phi + tau1 * w * mean_curv_mot + 0.5 * prop_towards_edges
+    phi_next = phi + tau1 * w * mean_curv_mot + prop_towards_edges
 
     return phi_next
 # ------------------------
@@ -139,7 +142,7 @@ def geodesic_active_contour(edge_magn, phi):
 if __name__ == '__main__':
 
     n_steps = 20000
-    plot_every_n_step = 5
+    plot_every_n_step = 20
 
     Im, phi = load_data()
 
