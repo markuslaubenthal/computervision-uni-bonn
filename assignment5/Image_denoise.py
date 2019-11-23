@@ -29,7 +29,7 @@ def question_3(I,rho=0.7,pairwise_cost_same=0.005,pairwise_cost_diff=0.2):
 
     for y in range(I.shape[0]):
         for x in range(I.shape[1]):
-
+            # get node indices for current node / left / right / top / bot
             i, il, ir, it, ib = index(x,y), index(x-1,y), index(x+1,y), index(x,y-1), index(x,y+1)
 
             ### Horizontal edges
@@ -47,7 +47,6 @@ def question_3(I,rho=0.7,pairwise_cost_same=0.005,pairwise_cost_diff=0.2):
 
 
 
-    print(g.get_nx_graph())
 
     # (Keep in mind the stucture of neighbourhood and set the weights according to the pairwise potential)
 
@@ -56,11 +55,11 @@ def question_3(I,rho=0.7,pairwise_cost_same=0.005,pairwise_cost_diff=0.2):
     ### 6) Maxflow
     g.maxflow()
 
+    # Graph cut denoise image
     Denoised_I = I.copy().astype(np.float32)
     for y in range(I.shape[0]):
         for x in range(I.shape[1]):
             Denoised_I[y,x] = g.get_segment(nodes[index(x,y)[0]])
-
 
 
     cv2.imshow('Original Img', I), \
