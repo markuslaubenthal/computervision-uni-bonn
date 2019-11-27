@@ -20,7 +20,7 @@ def question_3(I,rho=0.7,pairwise_cost_same=0.005,pairwise_cost_diff=0.2):
         return pairwise_cost_same if (I[p1[1],p1[0]] == I[p2[1],p2[0]]) else pairwise_cost_diff
 
     def unary_cost(p1):
-        return rho if (I[p1[1],p1[0]] == 255) else 1-rho
+        return -np.log(1-rho) if (I[p1[1],p1[0]] == 255) else -np.log(rho)
 
 
     ### 3) Compute Unary cost
@@ -33,13 +33,13 @@ def question_3(I,rho=0.7,pairwise_cost_same=0.005,pairwise_cost_diff=0.2):
             i, il, ir, it, ib = index(x,y), index(x-1,y), index(x+1,y), index(x,y-1), index(x,y+1)
 
             ### Horizontal edges
-            if il is not None:
-                g.add_edge(nodes[i[0]],nodes[il[0]], pairwise_cost(i[1],il[1]), pairwise_cost(i[1],il[1]))
+            #if il is not None:
+            #    g.add_edge(nodes[i[0]],nodes[il[0]], pairwise_cost(i[1],il[1]), pairwise_cost(i[1],il[1]))
             if ir is not None:
                 g.add_edge(nodes[i[0]], nodes[ir[0]], pairwise_cost(i[1],ir[1]), pairwise_cost(i[1],ir[1]))
             ### Vertical Edges
-            if it is not None:
-                g.add_edge(nodes[i[0]],nodes[it[0]], pairwise_cost(i[1],it[1]), pairwise_cost(i[1],it[1]))
+            #if it is not None:
+            #    g.add_edge(nodes[i[0]],nodes[it[0]], pairwise_cost(i[1],it[1]), pairwise_cost(i[1],it[1]))
             if ib is not None:
                 g.add_edge(nodes[i[0]],nodes[ib[0]], pairwise_cost(i[1],ib[1]), pairwise_cost(i[1],ib[1]))
 
