@@ -10,18 +10,32 @@ def get_observation(t):
 
 class KalmanFilter(object):
     def __init__(self, psi, sigma_p, phi, sigma_m, tau):
-        self.psi = psi
-        self.sigma_p = sigma_p
-        self.phi = phi
+
+        self.size = psi.shape[0] * (tau + 1)
+        self.psi = np.zeros((self.size,self.size))
+        ident = np.identity(self.size - psi.shape[0])
+        self.psi[0:4,0:4] = psi
+        self.psi[4:,0:-4] = ident
+
+
+        self.sigma_p = np.zeros((self.size, self.size))
+        self.sigma_p[0:4,0:4] = sigma_p
+
         self.sigma_m = sigma_m
+
+        self.phi = np.zeros((2,self.size))
+        self.phi[0:2,0:4] = phi
+
+
         self.state = None
         self.convariance = None
         self.tau = tau
         #self.sigma_t = sigma_p
 
     def init(self, init_state):
-        self.state = init_state
-        self.covariance = np.identity(4)
+        self.state = np.zeros(self.size)
+        self.state[0:4] = init_state
+        self.covariance = np.identity(self.size)
         pass
 
     def track(self, xt):
@@ -42,7 +56,7 @@ class KalmanFilter(object):
         mu_t = mue_prediction + np.dot(kalman_gain, inner)
         print("mu_t", mu_t)
         #Covariance update
-        sigma_t = np.dot(np.identity(4) - np.dot(kalman_gain, self.phi), sigma_p_prediction)
+        sigma_t = np.dot(np.identity(self.size) - np.dot(kalman_gain, self.phi), sigma_p_prediction)
         print('sigma_t', sigma_t)
 
         self.covariance = sigma_t
@@ -50,7 +64,7 @@ class KalmanFilter(object):
         pass
 
     def get_current_location(self):
-        return self.state[0:2]
+        return self.state[-4:-2]
         pass
 
 def perform_tracking(tracker):
@@ -93,7 +107,7 @@ def main():
     plt.figure()
     plt.plot([x[0] for x in observations], [x[1] for x in observations])
     plt.plot([x[0] for x in track], [x[1] for x in track])
-    #plt.plot([x[0] for x in track_smoothed], [x[1] for x in track_smoothed])
+    plt.plot([x[0] for x in track_smoothed], [x[1] for x in track_smoothed])
 
     plt.show()
 
