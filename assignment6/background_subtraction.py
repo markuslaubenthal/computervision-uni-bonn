@@ -93,7 +93,7 @@ class GMM(object):
                             / r_sum
         pass
 
-    def train(self, data, n_iterations = 20, k_splits = 3):
+    def train(self, data, n_iterations = 10, k_splits = 3):
         self.data = data
         for i in range(n_iterations):
             if i < k_splits:
@@ -106,7 +106,7 @@ class GMM(object):
         pass
 
 
-    def split(self, epsilon = 15):
+    def split(self, epsilon = 0.1):
         mue = np.array([])
         sigma = np.array([])
         lamb = np.array([])
@@ -141,7 +141,7 @@ class GMM(object):
         pass
 
 
-    def em_algorithm(self, tau=0.4):
+    def em_algorithm(self, tau=0.5):
         global image_max
         mue, sigma = self.fit_single_gaussian(self.background)
         self.mue = np.array([mue])
@@ -154,7 +154,7 @@ class GMM(object):
         prob = prob / prob.max()
         indices = np.where(prob > tau)
         self.image *= image_max
-        self.image = cv.cvtColor(self.image, cv.COLOR_HSV2BGR)
+        self.image = cv.cvtColor(self.image.astype(np.uint8), cv.COLOR_HSV2BGR)
         self.image[indices] = [0,0,0]
 
 
