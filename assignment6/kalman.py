@@ -16,6 +16,8 @@ class KalmanFilter(object):
         ident = np.identity(self.size - psi.shape[0])
         self.psi[0:4,0:4] = psi
         self.psi[4:,0:-4] = ident
+        self.psi[3,3] *= tau
+        self.psi[2,2] *= tau
 
 
         self.sigma_p = np.zeros((self.size, self.size))
@@ -98,7 +100,7 @@ def main():
     tracker = KalmanFilter(psi, sigma_p, phi, sigma_m, tau=0)
     tracker.init(init_state)
 
-    fixed_lag_smoother = KalmanFilter(psi, sigma_p, phi, sigma_m, tau=5)
+    fixed_lag_smoother = KalmanFilter(psi, sigma_p, phi, sigma_m, tau=50)
     fixed_lag_smoother.init(init_state)
 
     track = perform_tracking(tracker)
