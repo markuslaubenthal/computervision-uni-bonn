@@ -21,7 +21,12 @@ def read_image(filename):
     return image, foreground, background
 
 def pdf(x,mue,sigma):
-    numerator = np.exp(-0.5* np.dot(np.transpose(x-mue),(1/sigma) * (x-mue)))
+    numerator = np.exp(-0.5 *
+                    np.sum(
+                        (x-mue.reshape(1,mue.shape[0])) ** 2 *
+                        (1/sigma.reshape(1,sigma.shape[0]))
+                    , axis=1)
+                )
     denominator = np.sqrt(((2*np.pi) ** 3) * np.prod(sigma))
     return numerator/denominator
 
@@ -51,13 +56,12 @@ class GMM(object):
 
     def estep(self):
         r = np.zeros((self.data.shape[0], self.mue.shape[0]))
-        for i in range(self.data.shape[0]):
-            denominator = 0
-            for k in range(self.mue.shape[0]):
-                denominator += self.lamb[k] * pdf(self.data[i], self.mue[k], self.sigma[k])
-            for k in range(self.mue.shape[0]):
-                numerator = self.lamb[k] * pdf(self.data[i], self.mue[k], self.sigma[k])
-                r[i,k] = numerator / denominator
+        denominator = 0
+        for k in range(self.mue.shape[0]):
+            denominator += self.lamb[k] * pdf(self.data, self.mue[k], self.sigma[k])
+        for k in range(self.mue.shape[0]):
+            numerator = self.lamb[k] * pdf(self.data, self.mue[k], self.sigma[k])
+            r[:,k] = numerator / denominator
         return r
         pass
 
@@ -79,12 +83,15 @@ class GMM(object):
                             / r_sum
         pass
 
-    def em_algorithm(self, n_iterations = 10, k_splits = 3):
+    def em_algorithm(self, n_iterations = 1000, k_splits = 1):
         for i in range(n_iterations):
             if i < k_splits:
                 self.split()
             self.mstep(self.estep())
-            break
+        print(self.mue)
+        print(self.sigma)
+        print(self.lamb)
+
         pass
 
 
