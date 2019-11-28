@@ -9,8 +9,19 @@ import cv2 as cv
     background/foreground: numpy array of size (n_pixels, 3) (3 for RGB values), i.e. the data you need to train the GMM
 '''
 
+def display(img):
+    cv.imshow('image', img)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+
+image_max = None
 def read_image(filename):
-    image = cv.imread(filename) / 255.0
+    global image_max
+    image = cv.imread(filename)
+    image = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    image_max = image.max()
+    image = image / image.max()
     height, width = image.shape[:2]
     bounding_box = np.zeros(image.shape)
     bounding_box[90:350, 110:250, :] = 1
@@ -35,10 +46,9 @@ class GMM(object):
         self.image = image
         self.foreground = foreground
         self.background = background
-        self.data = image.reshape(image.shape[0] * image.shape[1], 3)
-        mue, sigma = self.fit_single_gaussian()
-        self.mue = np.array([mue])
-        self.sigma = np.array([sigma])
+        self.data = None
+        self.mue = None
+        self.sigma = None
         self.lamb = np.ones(1)
 
     def gaussian_scores(self, data):
@@ -46,9 +56,9 @@ class GMM(object):
         pass
 
 
-    def fit_single_gaussian(self):
-        mue = np.mean(self.data, axis=0)
-        var = np.var(self.data, axis=0)
+    def fit_single_gaussian(self, data):
+        mue = np.mean(data, axis=0)
+        var = np.var(data, axis=0)
         return mue, var
 
         pass
@@ -83,7 +93,8 @@ class GMM(object):
                             / r_sum
         pass
 
-    def em_algorithm(self, n_iterations = 1000, k_splits = 1):
+    def train(self, data, n_iterations = 20, k_splits = 3):
+        self.data = data
         for i in range(n_iterations):
             if i < k_splits:
                 self.split()
@@ -95,7 +106,7 @@ class GMM(object):
         pass
 
 
-    def split(self, epsilon = 0.1):
+    def split(self, epsilon = 15):
         mue = np.array([])
         sigma = np.array([])
         lamb = np.array([])
@@ -130,8 +141,30 @@ class GMM(object):
         pass
 
 
-    def train(self, data, n_splits):
-        # TODO
+    def em_algorithm(self, tau=0.4):
+        global image_max
+        mue, sigma = self.fit_single_gaussian(self.background)
+        self.mue = np.array([mue])
+        self.sigma = np.array([sigma])
+        self.train(self.background)
+        prob = np.zeros(self.image.shape[0] * self.image.shape[1])
+        for k in range(self.mue.shape[0]):
+            prob += self.lamb[k] * pdf(self.image.reshape(self.image.shape[0] * self.image.shape[1], 3), self.mue[k], self.sigma[k])
+        prob = prob.reshape(self.image.shape[0],self.image.shape[1])
+        prob = prob / prob.max()
+        indices = np.where(prob > tau)
+        self.image *= image_max
+        self.image = cv.cvtColor(self.image, cv.COLOR_HSV2BGR)
+        self.image[indices] = [0,0,0]
+
+
+
+        display(self.image.astype(np.uint8))
+        # with np.nditer(self.image, op_flags=['readwrite']) as it
+        # for px in it:
+        #     for k in range(self.mue.shape[0]):
+
+
         pass
 
 
