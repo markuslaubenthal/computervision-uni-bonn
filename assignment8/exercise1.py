@@ -3,13 +3,18 @@ from sklearn.datasets import fetch_lfw_people
 from sklearn.model_selection import train_test_split
 import cv2
 import sklearn
-<<<<<<< HEAD
 import sklearn.decomposition
-=======
->>>>>>> 53ad39cdd82b68919f5208a4ec788a884584f195
 import random
 import matplotlib.pylab as plt
 
+
+def display(img, points, pointss):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.imshow(img, cmap='gray')
+    ax.plot(pointss[:,0],pointss[:,1],c='red')
+    ax.plot(points[:,0],points[:,1],c='green')
+    plt.show()
 
 def main():
     random.seed(0)
