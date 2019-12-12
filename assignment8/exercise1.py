@@ -3,7 +3,10 @@ from sklearn.datasets import fetch_lfw_people
 from sklearn.model_selection import train_test_split
 import cv2
 import sklearn
+<<<<<<< HEAD
 import sklearn.decomposition
+=======
+>>>>>>> 53ad39cdd82b68919f5208a4ec788a884584f195
 import random
 import matplotlib.pylab as plt
 
@@ -37,7 +40,7 @@ def main():
     e1 = pca.components_[0]
     dingdong = np.dot(e1.T, np.dot(cov_matrix, e1))
 
-    
+
 
     # Visualize Eigen Faces
     # TODO
