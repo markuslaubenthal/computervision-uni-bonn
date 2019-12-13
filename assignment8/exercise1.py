@@ -35,7 +35,7 @@ def main():
         img = cv2.imread('./data/exercise1/detect/face/' + img, cv2.IMREAD_GRAYSCALE)
         img = (cv2.resize(img, (w, h)).flatten())
         test_images.append(img)
-    test_images = np.array(test_images)
+    test_images = np.array(test_images).astype(np.float32)
 
     object_images_name = ['cat.jpg', 'dog.jpg', 'flag.jpg', 'flower.jpg', 'monkey.jpg']
     object_images = []
@@ -59,57 +59,29 @@ def main():
 
     # Visualize Eigen Faces
     # TODO
-    cov_matrix = pca.get_covariance()
-    # fig = plt.figure()
-    # for i, eigenvector in enumerate(pca.components_[:10]):
-    #     ax = plt.subplot(4, 3, i + 1)
-    #     ax.imshow((eigenvector).reshape(h,w), cmap='gray')
-    #
-    # plt.show()
+    fig = plt.figure()
+    for i, eigenvector in enumerate(pca.components_[:10]):
+        ax = plt.subplot(4, 3, i + 1)
+        ax.imshow((eigenvector).reshape(h,w), cmap='gray')
+
+    plt.show()
 
     # Compute reconstruction error
     # TODO
-    def calculate_coefficients(images):
-        image_pca = pca.transform(images)
-        return image_pca
 
-    # X_train_pca, X_test_pca = calculate_coefficients(X_train, X_test)
     eigenvectors = pca.components_
-    coefficients = calculate_coefficients(test_images) / np.linalg.norm(eigenvectors, axis=1) **2
-    print("coefficients", coefficients)
-    print("eigenvectors shape:", pca.components_.shape)
-    print("coefficients shape", coefficients.shape)
-    print(coefficients.dot(eigenvectors).shape)
-    print((pca.mean_[:,None] + eigenvectors.T.dot(coefficients.T)).shape)
-    images_err = (test_images -
-        (pca.mean_ + coefficients.dot(eigenvectors))
-    )
-    # images_err = (test_images -
-    #     (pca.mean_ + images_pca.dot(eigenvectors) /
-    #     np.linalg.norm(eigenvectors, axis=0) ** 2)
-    # )
-    error_per_image = np.linalg.norm(images_err, axis = 1)
-    print(error_per_image)
+    mean = pca.mean_
 
-    # test = pca.inverse_transform(test_images)
-    # display(test[0].reshape(h,w))
-    # display(test_images[0].reshape(h,w))
+    def calculate_coefficients(image, mean, eigenvectors):
+        diff = image - mean
+        coefficients = eigenvectors.dot(diff)
+        return coefficients
+
+    coefficients = calculate_coefficients(test_images[0], mean, eigenvectors)
+
+    display((pca.mean_ + (eigenvectors.T * coefficients).sum(axis=1)).reshape(h,w))
 
 
-
-    display(test_images[0].reshape(h,w))
-    display((coefficients.dot(eigenvectors))[0].reshape(h,w))
-    # display(test_images[1].reshape(h,w))
-    # display((pca.mean_ + coefficients.dot(eigenvectors))[1].reshape(h,w))
-    # display(test_images[2].reshape(h,w))
-    # display((pca.mean_ + coefficients.dot(eigenvectors))[2].reshape(h,w))
-    # display(test_images[3].reshape(h,w))
-    # display((pca.mean_ + coefficients.dot(eigenvectors))[3].reshape(h,w))
-    # display(test_images[4].reshape(h,w))
-    # display((pca.mean_ + coefficients.dot(eigenvectors))[4].reshape(h,w))
-
-
-    print(error_per_image)
     # Perform face detection
     # TODO
 
