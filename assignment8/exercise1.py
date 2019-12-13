@@ -59,6 +59,7 @@ def main():
 
     # Visualize Eigen Faces
     # TODO
+
     fig = plt.figure()
     for i, eigenvector in enumerate(pca.components_[:10]):
         ax = plt.subplot(4, 3, i + 1)
@@ -82,9 +83,34 @@ def main():
     display((pca.mean_ + (eigenvectors.T * coefficients).sum(axis=1)).reshape(h,w))
 
 
+
     # Perform face detection
     # TODO
+    # Select random image
+    randint = np.random.randint(2)
+    image = None
+    test_label = None
+    if(randint == 0):
+        index = np.random.randint(object_images.shape[0])
+        image = object_images[index]
+        error = error_per_image_obj[index]
+        test_label = 'object'
+    else:
+        index = np.random.randint(test_images.shape[0])
+        image = test_images[index]
+        error = error_per_image[index]
+        test_label = 'face'
 
+    label = None
+    print("The prediction is: ", end='')
+    if(error > 2000):
+        label = "object"
+    else:
+        label = "face"
+    print(label)
+    print("the label is:", test_label)
+
+    display(image.reshape(h,w))
 
     # Perform face recognition
     # TODO
