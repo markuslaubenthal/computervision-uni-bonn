@@ -1,3 +1,5 @@
+# authors: Markus Laubenthal, Lennard Alms
+
 import numpy as np
 from sklearn.datasets import fetch_lfw_people
 from sklearn.model_selection import train_test_split
