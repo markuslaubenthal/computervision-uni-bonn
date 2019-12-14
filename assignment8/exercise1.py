@@ -19,8 +19,8 @@ def display(img):
     plt.show()
 
 def main():
-    random.seed(0)
-    np.random.seed(0)
+    # random.seed(0)
+    # np.random.seed(0)
 
 
     # Loading the LFW dataset
@@ -47,7 +47,6 @@ def main():
         object_images.append(img)
     object_images = np.array(object_images)
 
-    # test_images = object_images
 
     # splitting the data into train and test
     X_train, X_test, y_train, y_test = train_test_split(
@@ -80,10 +79,10 @@ def main():
         coefficients = eigenvectors.dot(diff)
         return coefficients
 
-    coefficients = calculate_coefficients(test_images[0], mean, eigenvectors)
-
-    display((pca.mean_ + (eigenvectors.T * coefficients).sum(axis=1)).reshape(h,w))
-
+    # coefficients = calculate_coefficients(test_images, mean, eigenvectors)
+    # print(coefficients)
+    # display((pca.mean_ + (eigenvectors.T * coefficients).sum(axis=1)).reshape(h,w))
+    # reconstruction = (pca.mean_ + (eigenvectors.T * coefficients).sum(axis=1))
 
 
     # Perform face detection
@@ -95,17 +94,26 @@ def main():
     if(randint == 0):
         index = np.random.randint(object_images.shape[0])
         image = object_images[index]
-        error = error_per_image_obj[index]
         test_label = 'object'
     else:
         index = np.random.randint(test_images.shape[0])
         image = test_images[index]
-        error = error_per_image[index]
         test_label = 'face'
+
+    coefficients = calculate_coefficients(image, mean, eigenvectors)
+    print(eigenvectors.shape)
+    print(coefficients.shape)
+    error = np.linalg.norm(
+        image.flatten()
+        - np.sum(
+            coefficients[:,None] * eigenvectors, axis = 0
+        ) - mean
+    )
+    print("Error: ", error)
 
     label = None
     print("The prediction is: ", end='')
-    if(error > 2000):
+    if(error > 1400):
         label = "object"
     else:
         label = "face"
